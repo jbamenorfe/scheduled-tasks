@@ -1,38 +1,53 @@
-# To run and test the code you need to update 4 places:
-# 1. Change MY_EMAIL/MY_PASSWORD to your own details.
-# 2. Go to your email provider and make it allow less secure apps.
-# 3. Update the SMTP ADDRESS to match your email provider.
-# 4. Update birthdays.csv to contain today's month and day.
-# See the solution video in the 100 Days of Python Course for explainations.
+""" This program sends a birthday email to the user's family members and friends
+Author:     Joshua Bright Amenorfe
+Date:       17/03/2026"""
 
-
-from datetime import datetime
-import pandas
+import pandas as pd
+import datetime as dt
+import smtplib, ssl
+from email.message import EmailMessage
 import random
-import smtplib
 import os
 
-# import os and use it to get the Github repository secrets
-MY_EMAIL = os.environ.get("MY_EMAIL")
-MY_PASSWORD = os.environ.get("MY_PASSWORD")
+#   Create a datetime object called now
+now = dt.datetime.now()
+today_month = now.month
+today_day = now.day
+today = (today_month, today_day)        # Create a tuple of month and day
 
-today = datetime.now()
-today_tuple = (today.month, today.day)
+#   Use pandas to read the birthdays.csv
+birthdays = pd.read_csv('birthdays.csv')
 
-data = pandas.read_csv("birthdays.csv")
-birthdays_dict = {(data_row["month"], data_row["day"])                  : data_row for (index, data_row) in data.iterrows()}
-if today_tuple in birthdays_dict:
-    birthday_person = birthdays_dict[today_tuple]
-    file_path = f"letter_templates/letter_{random.randint(1, 3)}.txt"
-    with open(file_path) as letter_file:
-        contents = letter_file.read()
-        contents = contents.replace("[NAME]", birthday_person["name"])
+#   Convert the read .csv file to a dictionary
+birthdays_dict = { (row.month, row.day): row for (index, row) in birthdays.iterrows()}
 
-    with smtplib.SMTP("YOUR EMAIL PROVIDER SMTP SERVER ADDRESS") as connection:
-        connection.starttls()
-        connection.login(MY_EMAIL, MY_PASSWORD)
-        connection.sendmail(
-            from_addr=MY_EMAIL,
-            to_addrs=birthday_person["email"],
-            msg=f"Subject:Happy Birthday!\n\n{contents}"
-        )
+if (today_month, today_day) in birthdays_dict:      #   Check to see if the month and day are in dictionary
+    celebrant_name = birthdays_dict[(today_month, today_day)]["name"]       # Celebrant name is name of person whose
+    # birthday and birthmonth are found in the dictionary
+    celebrant_email = birthdays_dict[(today_month, today_day)]["email"]     # Celebrant's emial is the email of the
+    # person whose birthmonth and birthday are found in the dictionary
+    letter_num = random.randint(1,3)        # Generate a random integer
+
+    with open(f"letter_templates/letter_{letter_num}.txt", "r") as file:    # Use the random integer to select a letter
+        letter = file.read()        # Read the letter
+        letter_to_send = letter.replace("[NAME]", celebrant_name)   # Replace the salutation on the chosen template
+
+        sender_email = "pymailcoder@gmail.com"
+        receiver_email = celebrant_email
+        app_password = "ioojlqwzptpzhubg"
+
+        msg = EmailMessage()
+        msg.set_content(letter_to_send)
+
+        msg['Subject'] = f"Happy Birthday! {celebrant_name}!"
+        msg['From'] = sender_email
+        msg['To'] = receiver_email
+        try:
+            context = ssl.create_default_context()
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+                server.login(sender_email, app_password)
+                server.send_message(msg)
+                print("Email sent successfully")
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
