@@ -9,6 +9,9 @@ import smtplib, ssl
 from email.message import EmailMessage
 import random
 
+MY_EMAIL = os.environ.get("MY_EMAIL")
+MY_PASSWORD = os.environ.get("MY_PASSWORD")
+
 
 #   Create a datetime object called now
 now = dt.datetime.now()
@@ -33,9 +36,9 @@ if (today_month, today_day) in birthdays_dict:      #   Check to see if the mont
         letter = file.read()        # Read the letter
         letter_to_send = letter.replace("[NAME]", celebrant_name)   # Replace the salutation on the chosen template
 
-        sender_email = "pymailcoder@gmail.com"
+        sender_email = MY_EMAIL
         receiver_email = celebrant_email
-        app_password = "ioojlqwzptpzhubg"
+        app_password = MY_PASSWORD
 
         msg = EmailMessage()
         msg.set_content(letter_to_send)
