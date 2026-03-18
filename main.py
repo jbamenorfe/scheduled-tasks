@@ -2,12 +2,13 @@
 Author:     Joshua Bright Amenorfe
 Date:       17/03/2026"""
 
+import os
 import pandas as pd
 import datetime as dt
 import smtplib, ssl
 from email.message import EmailMessage
 import random
-import os
+
 
 #   Create a datetime object called now
 now = dt.datetime.now()
